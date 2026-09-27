@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import {
+  getSupabasePublicEnv,
+  SUPABASE_DB_TIMEOUT_MS,
+} from "@/lib/supabase/env";
 import type { Database } from "@/types/database.types";
 
 export async function createClient() {
@@ -9,6 +12,7 @@ export async function createClient() {
   const { publishableKey, url } = getSupabasePublicEnv();
 
   return createServerClient<Database>(url, publishableKey, {
+    db: { timeout: SUPABASE_DB_TIMEOUT_MS },
     cookies: {
       getAll() {
         return cookieStore.getAll();

@@ -2,7 +2,13 @@ export const siteConfig = {
   name: "Snapora",
   title: "Snapora — Photography Studio Booking Platform",
   description:
-    "A streamlined studio experience for exploring photography and requesting a session.",
+    "An editorial photography studio experience for exploring work and requesting a session.",
+  studio: {
+    address: null,
+    email: null,
+    hours: null,
+    phone: null,
+  },
   publicNavigation: [
     { label: "Portfolio", href: "/portfolio" },
     { label: "Packages", href: "/packages" },

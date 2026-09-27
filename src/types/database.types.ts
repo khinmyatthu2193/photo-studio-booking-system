@@ -284,6 +284,12 @@ export type Database = {
         };
         Relationships: [];
       };
+      studio_settings: {
+        Row: { id: string; studio_name: string; description: string | null; address: string | null; phone: string | null; email: string | null; hours: string | null; updated_at: string };
+        Insert: { id?: string; studio_name?: string; description?: string | null; address?: string | null; phone?: string | null; email?: string | null; hours?: string | null; updated_at?: string };
+        Update: { id?: string; studio_name?: string; description?: string | null; address?: string | null; phone?: string | null; email?: string | null; hours?: string | null; updated_at?: string };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -303,6 +309,40 @@ export type Database = {
           p_time_slot: string;
         };
         Returns: {
+          booking_date: string;
+          booking_id: string;
+          booking_number: string;
+          package_name: string;
+          status: Database["public"]["Enums"]["booking_status"];
+          time_slot: string;
+          total_price: number;
+        }[];
+      };
+      get_booking_slots: {
+        Args: {
+          p_booking_date: string;
+          p_package_id: string;
+        };
+        Returns: {
+          is_available: boolean;
+          time_slot: string;
+        }[];
+      };
+      submit_booking_request: {
+        Args: {
+          p_addon_ids?: string[];
+          p_booking_date: string;
+          p_customer_name: string;
+          p_email?: string;
+          p_package_id: string;
+          p_people_count?: number;
+          p_phone: string;
+          p_social_contact?: string;
+          p_special_request?: string;
+          p_time_slot: string;
+        };
+        Returns: {
+          addons: Json;
           booking_date: string;
           booking_id: string;
           booking_number: string;

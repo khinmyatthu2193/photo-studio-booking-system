@@ -3,6 +3,8 @@ type SupabasePublicEnv = {
   url: string;
 };
 
+export const SUPABASE_DB_TIMEOUT_MS = 8_000;
+
 export function getSupabasePublicEnv(): SupabasePublicEnv {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

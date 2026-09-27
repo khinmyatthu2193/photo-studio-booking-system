@@ -1,12 +1,15 @@
-import { AdminSection } from "@/components/admin/admin-section";
-
+import Link from "next/link";
+import { savePackage, setPackageActive } from "@/app/admin/management-actions";
+import { ActionNotice } from "@/components/admin/action-notice";
+import { ConfirmActionButton } from "@/components/admin/confirm-action-button";
+import { getAllPackages } from "@/lib/admin-packages";
+import { formatMmk } from "@/lib/format";
 export const metadata = { title: "Manage packages" };
-
-export default function AdminPackagesPage() {
-  return (
-    <AdminSection
-      description="The authenticated package catalog workflow will be implemented here."
-      title="Packages"
-    />
-  );
+const field = "mt-1 w-full border border-line bg-surface px-3 py-2";
+export default async function PackagesPage({ searchParams }: { searchParams: Promise<{ edit?: string; error?: string; notice?: string }> }) {
+  const params = await searchParams; const result = await getAllPackages(); const editing = result.data.find((item) => item.id === params.edit);
+  return <div><p className="eyebrow">Catalog</p><h1 className="mt-3 font-display text-4xl">Packages</h1><p className="mt-3 text-muted">Create and update bookable sessions.</p><div className="mt-8"><ActionNotice error={params.error} notice={params.notice} /></div>{result.error && <p role="alert">Packages could not be loaded.</p>}
+    <section className="mt-8 border border-line bg-surface p-5"><h2 className="font-display text-2xl">{editing ? "Edit package" : "New package"}</h2><form action={savePackage} className="mt-5 grid gap-4 sm:grid-cols-2"><input name="id" type="hidden" value={editing?.id ?? ""} /><label>Name<input className={field} defaultValue={editing?.name} maxLength={120} name="name" required /></label><label>Price (MMK)<input className={field} defaultValue={editing?.price ?? 0} min={0} name="price" required type="number" /></label><label>Duration (min)<input className={field} defaultValue={editing?.duration_minutes ?? 60} max={1440} min={15} name="duration_minutes" required type="number" /></label><label>Display order<input className={field} defaultValue={editing?.display_order ?? 0} min={0} name="display_order" required type="number" /></label><label>Edited photos<input className={field} defaultValue={editing?.included_photos ?? 0} min={0} name="included_photos" required type="number" /></label><label>Outfits<input className={field} defaultValue={editing?.included_outfits ?? 0} min={0} name="included_outfits" required type="number" /></label><label>Locations<input className={field} defaultValue={editing?.included_locations ?? 0} min={0} name="included_locations" required type="number" /></label><label className="sm:col-span-2">Description<textarea className={field} defaultValue={editing?.description} name="description" rows={3} /></label><label className="flex gap-2 sm:col-span-2"><input defaultChecked={editing?.is_active ?? true} name="is_active" type="checkbox" />Active</label><div className="flex items-center gap-4 sm:col-span-2"><button className="rounded-full bg-ink px-5 py-3 text-sm text-cream">Save package</button>{editing && <Link className="text-purple underline" href="/admin/packages">Cancel edit</Link>}</div></form></section>
+    <h2 className="mt-10 font-display text-2xl">Current packages</h2>{!result.error && result.data.length === 0 && <p className="mt-4 text-muted">No packages yet.</p>}<ul className="mt-4 divide-y divide-line border-t border-line">{result.data.map((item) => <li className="flex flex-wrap items-center justify-between gap-4 py-5" key={item.id}><div><strong>{item.name}</strong><p className="text-sm text-muted">{formatMmk(item.price)} · {item.duration_minutes} min · {item.is_active ? "Active" : "Inactive"}</p></div><div className="flex gap-2"><Link className="rounded-full border border-line px-4 py-2 text-sm" href={`/admin/packages?edit=${item.id}`}>Edit</Link><form action={setPackageActive.bind(null, item.id, !item.is_active)}>{item.is_active ? <ConfirmActionButton label="Deactivate" question="Hide this package?" /> : <button className="rounded-full border border-line px-4 py-2 text-sm">Activate</button>}</form></div></li>)}</ul>
+  </div>;
 }

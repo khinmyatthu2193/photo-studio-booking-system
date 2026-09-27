@@ -1,12 +1,15 @@
-import { AdminSection } from "@/components/admin/admin-section";
-
+import { addBlockedDate, removeBlockedDate, saveWeeklyAvailability } from "@/app/admin/management-actions";
+import { ActionNotice } from "@/components/admin/action-notice";
+import { ConfirmActionButton } from "@/components/admin/confirm-action-button";
+import { getAvailabilityData } from "@/lib/admin-availability";
+import { getStudioToday } from "@/lib/booking";
 export const metadata = { title: "Manage availability" };
-
-export default function AdminAvailabilityPage() {
-  return (
-    <AdminSection
-      description="Weekly hours and specific blocked dates will be managed here."
-      title="Availability"
-    />
-  );
+const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const field = "border border-line bg-surface px-3 py-2";
+export default async function AvailabilityPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
+  const [params, result] = await Promise.all([searchParams, getAvailabilityData()]);
+  return <div><p className="eyebrow">Studio schedule</p><h1 className="mt-3 font-display text-4xl">Availability</h1><p className="mt-3 text-muted">Set opening hours and block specific dates. All times use Asia/Yangon.</p><div className="mt-8"><ActionNotice error={params.error} notice={params.notice} /></div>
+    {result.error ? <p className="mt-8 border border-coral-deep p-5" role="alert">Availability could not be loaded.</p> : <><section className="mt-8 border border-line bg-surface p-5"><h2 className="font-display text-2xl">Weekly hours</h2><form action={saveWeeklyAvailability} className="mt-5 space-y-4">{days.map((day, index) => { const row = result.weekly.find((item) => item.day_of_week === index); return <div className="grid gap-3 border-t border-line pt-4 sm:grid-cols-[9rem_1fr_1fr]" key={day}><label className="flex items-center gap-2"><input defaultChecked={row?.is_available ?? false} name={`open-${index}`} type="checkbox" />{day}</label><label className="grid gap-1 text-xs">Opens<input className={field} defaultValue={row?.start_time?.slice(0, 5) ?? "09:00"} name={`start-${index}`} type="time" /></label><label className="grid gap-1 text-xs">Closes<input className={field} defaultValue={row?.end_time?.slice(0, 5) ?? "18:00"} name={`end-${index}`} type="time" /></label></div>; })}<button className="rounded-full bg-ink px-5 py-3 text-sm text-cream">Save weekly hours</button></form></section>
+      <section className="mt-10"><h2 className="font-display text-2xl">Blocked dates</h2><form action={addBlockedDate} className="mt-5 flex flex-wrap items-end gap-3 border border-line bg-surface p-5"><label className="grid gap-1 text-sm">Date<input className={field} min={getStudioToday()} name="blocked_date" required type="date" /></label><label className="grid flex-1 gap-1 text-sm">Reason<input className={`${field} w-full`} maxLength={500} name="reason" /></label><button className="rounded-full bg-ink px-5 py-3 text-sm text-cream">Block date</button></form>{result.blocked.length === 0 ? <p className="mt-5 text-muted">No dates are blocked.</p> : <ul className="mt-5 divide-y divide-line">{result.blocked.map((item) => <li className="flex flex-wrap items-center justify-between gap-4 py-4" key={item.id}><span>{item.blocked_date} <span className="text-muted">{item.reason}</span></span><form action={removeBlockedDate.bind(null, item.id)}><ConfirmActionButton label="Unblock" question="Make this date available?" /></form></li>)}</ul>}</section></>}
+  </div>;
 }

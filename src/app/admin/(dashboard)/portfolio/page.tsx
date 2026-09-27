@@ -1,12 +1,16 @@
-import { AdminSection } from "@/components/admin/admin-section";
-
+import Image from "next/image";
+import { uploadPortfolio, savePortfolioItem, removePortfolioItem } from "@/app/admin/management-actions";
+import { ActionNotice } from "@/components/admin/action-notice";
+import { ConfirmActionButton } from "@/components/admin/confirm-action-button";
+import { getAdminPortfolio } from "@/lib/admin-portfolio";
+import { Constants } from "@/types/database.types";
 export const metadata = { title: "Manage portfolio" };
-
-export default function AdminPortfolioPage() {
-  return (
-    <AdminSection
-      description="Approved portfolio uploads and publishing controls will be backed by Supabase Storage here."
-      title="Portfolio"
-    />
-  );
+const field = "mt-1 w-full border border-line bg-surface px-3 py-2";
+const categories = Constants.public.Enums.portfolio_category;
+export default async function PortfolioPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
+  const [params, result] = await Promise.all([searchParams, getAdminPortfolio()]);
+  return <div><p className="eyebrow">Published work</p><h1 className="mt-3 font-display text-4xl">Portfolio</h1><p className="mt-3 text-muted">Upload approved studio photography and control what appears publicly.</p><div className="mt-8"><ActionNotice error={params.error} notice={params.notice} /></div>{result.error && <p role="alert">Portfolio could not be loaded.</p>}
+    <section className="mt-8 border border-line bg-surface p-5"><h2 className="font-display text-2xl">Add photograph</h2><form action={uploadPortfolio} className="mt-5 grid gap-4 sm:grid-cols-2"><label className="sm:col-span-2">Image (JPEG, PNG, WebP, AVIF; 10 MB max)<input accept="image/jpeg,image/png,image/webp,image/avif" className={field} name="image" required type="file" /></label><label>Title<input className={field} maxLength={160} name="title" required /></label><label>Category<select className={field} name="category">{categories.map((category) => <option key={category}>{category}</option>)}</select></label><label>Order<input className={field} defaultValue={0} min={0} name="display_order" required type="number" /></label><label className="sm:col-span-2">Description<textarea className={field} name="description" rows={2} /></label><label className="flex gap-2"><input name="is_featured" type="checkbox" />Featured</label><label className="flex gap-2"><input name="is_published" type="checkbox" />Published</label><button className="rounded-full bg-ink px-5 py-3 text-sm text-cream sm:col-span-2 sm:justify-self-start">Upload photo</button></form></section>
+    <h2 className="mt-10 font-display text-2xl">Images</h2>{!result.error && result.data.length === 0 && <p className="mt-4 text-muted">No images yet.</p>}<div className="mt-5 space-y-5">{result.data.map((item) => <article className="grid gap-5 border border-line bg-surface p-4 sm:grid-cols-[12rem_1fr]" key={item.id}><div className="relative aspect-[4/5] bg-peach"><Image alt={item.description || item.title} className="object-cover" fill sizes="192px" src={item.imageUrl} /></div><div><form action={savePortfolioItem} className="grid gap-3 sm:grid-cols-2"><input name="id" type="hidden" value={item.id} /><label>Title<input className={field} defaultValue={item.title} maxLength={160} name="title" required /></label><label>Category<select className={field} defaultValue={item.category} name="category">{categories.map((category) => <option key={category}>{category}</option>)}</select></label><label>Order<input className={field} defaultValue={item.display_order} min={0} name="display_order" type="number" /></label><label className="sm:col-span-2">Description<textarea className={field} defaultValue={item.description} name="description" rows={2} /></label><label className="flex gap-2"><input defaultChecked={item.is_featured} name="is_featured" type="checkbox" />Featured</label><label className="flex gap-2"><input defaultChecked={item.is_published} name="is_published" type="checkbox" />Published</label><button className="rounded-full border border-ink px-4 py-2 text-sm sm:justify-self-start">Save changes</button></form><form action={removePortfolioItem.bind(null, item.id)} className="mt-3"><ConfirmActionButton label="Delete image" question="Permanently remove this photo?" /></form></div></article>)}</div>
+  </div>;
 }
