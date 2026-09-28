@@ -259,53 +259,139 @@ export function BookingFlow({
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+    <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start xl:gap-12">
       <div className="min-w-0">
-        <ol aria-label="Booking progress" className="no-scrollbar flex gap-2 overflow-x-auto pb-4">
+        <div className="mb-3 flex items-center justify-between sm:hidden">
+          <p className="text-sm font-semibold">Step {step} of {steps.length}</p>
+          <p className="text-xs text-muted">{steps[step - 1]}</p>
+        </div>
+        <div
+          aria-hidden="true"
+          className="mb-7 h-1 overflow-hidden rounded-full bg-line sm:hidden"
+        >
+          <div
+            className="h-full rounded-full bg-purple transition-[width] duration-300"
+            style={{ width: `${(step / steps.length) * 100}%` }}
+          />
+        </div>
+        <ol
+          aria-label="Booking progress"
+          className="hidden grid-cols-6 border-y border-line sm:grid"
+        >
           {steps.map((label, index) => {
             const number = index + 1;
+            const isCurrent = step === number;
+            const isComplete = step > number;
             return (
               <li
-                aria-current={step === number ? "step" : undefined}
-                className={`flex min-w-max items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold ${
-                  step === number
-                    ? "border-purple bg-purple text-cream"
-                    : step > number
-                      ? "border-coral bg-coral/25 text-ink"
-                      : "border-line text-muted"
-                }`}
+                aria-current={isCurrent ? "step" : undefined}
+                className="relative"
                 key={label}
               >
-                <span>{number}</span>
-                <span>{label}</span>
+                <button
+                  className={`flex w-full items-center gap-2.5 px-2 py-4 text-left text-xs transition-colors lg:px-3 ${
+                    isCurrent ? "text-ink" : isComplete ? "text-purple" : "text-muted/65"
+                  } ${isComplete ? "hover:bg-peach/35" : ""}`}
+                  disabled={!isComplete}
+                  onClick={() => setStep(number)}
+                  type="button"
+                >
+                  <span
+                    className={`flex size-6 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-bold ${
+                      isCurrent
+                        ? "border-purple bg-purple text-cream"
+                        : isComplete
+                          ? "border-purple bg-purple/10 text-purple"
+                          : "border-line"
+                    }`}
+                  >
+                    {isComplete ? "✓" : number}
+                  </span>
+                  <span className="hidden font-semibold xl:inline">{label}</span>
+                </button>
+                {isCurrent ? (
+                  <span className="absolute inset-x-0 -bottom-px h-0.5 bg-purple" />
+                ) : null}
               </li>
             );
           })}
         </ol>
 
-        <div className="mt-6 border-t border-line pt-8 sm:mt-8 sm:pt-10">
+        <div className="mb-6 flex items-center justify-between border border-line bg-surface px-4 py-3 lg:hidden">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">
+              {selectedPackage?.name ?? "Choose a package"}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              {form.bookingDate ? formatBookingDate(form.bookingDate) : "Date not chosen"}
+            </p>
+          </div>
+          <p className="ml-4 shrink-0 font-display text-xl">{formatMmk(total)}</p>
+        </div>
+
+        <div className="border border-line bg-surface p-5 shadow-[0_18px_50px_rgba(73,49,41,0.06)] sm:p-8 lg:p-10">
           {step === 1 ? (
-            <BookingStep eyebrow="Step 1 of 6" title="Choose your package">
-              <div className="grid gap-4 sm:grid-cols-2">
+            <BookingStep
+              description="Select the session that best fits what you want to create."
+              eyebrow="Begin with the essentials"
+              title="Choose your package"
+            >
+              <div className="grid gap-3">
                 {packages.map((item) => {
                   const selected = item.id === form.packageId;
+                  const inclusions = [
+                    item.included_photos > 0 ? `${item.included_photos} edited photos` : null,
+                    item.included_outfits > 0
+                      ? `${item.included_outfits} ${item.included_outfits === 1 ? "outfit" : "outfits"}`
+                      : null,
+                    item.included_locations > 0
+                      ? `${item.included_locations} ${item.included_locations === 1 ? "location" : "locations"}`
+                      : null,
+                  ].filter((value): value is string => value !== null);
                   return (
                     <button
                       aria-pressed={selected}
-                      className={`min-h-44 rounded-sm border p-5 text-left transition ${
+                      className={`group relative grid min-h-40 gap-5 border p-5 text-left transition sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6 ${
                         selected
-                          ? "border-purple bg-purple text-cream"
-                          : "border-line bg-surface hover:border-purple"
+                          ? "border-purple bg-purple/8 shadow-[inset_4px_0_0_var(--purple)]"
+                          : "border-line bg-cream/25 hover:border-purple hover:bg-cream/60"
                       }`}
                       key={item.id}
                       onClick={() => choosePackage(item.id)}
                       type="button"
                     >
-                      <span className="font-display text-2xl">{item.name}</span>
-                      <span className={`mt-2 block text-sm ${selected ? "text-cream/70" : "text-muted"}`}>
-                        {formatDuration(item.duration_minutes)}
+                      <span>
+                        <span className="flex items-center gap-3">
+                          <span
+                            aria-hidden="true"
+                            className={`flex size-5 items-center justify-center rounded-full border ${
+                              selected ? "border-purple bg-purple" : "border-line bg-surface"
+                            }`}
+                          >
+                            {selected ? <span className="size-1.5 rounded-full bg-cream" /> : null}
+                          </span>
+                          <span className="font-display text-2xl sm:text-3xl">{item.name}</span>
+                        </span>
+                        {item.description ? (
+                          <span className="mt-3 block max-w-xl text-sm leading-6 text-muted">
+                            {item.description}
+                          </span>
+                        ) : null}
+                        <span className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+                          <span>{formatDuration(item.duration_minutes)}</span>
+                          {inclusions.map((inclusion) => (
+                            <span key={inclusion}>· {inclusion}</span>
+                          ))}
+                        </span>
                       </span>
-                      <span className="mt-8 block font-semibold">{formatMmk(item.price)}</span>
+                      <span className="flex items-end justify-between gap-4 border-t border-line pt-4 sm:block sm:border-0 sm:pt-0 sm:text-right">
+                        <span className="text-[0.65rem] font-bold tracking-[0.14em] text-purple uppercase">
+                          Session from
+                        </span>
+                        <span className="block font-display text-2xl sm:mt-2">
+                          {formatMmk(item.price)}
+                        </span>
+                      </span>
                     </button>
                   );
                 })}
@@ -552,7 +638,7 @@ export function BookingFlow({
 
           <div className="mt-10 flex flex-col-reverse gap-3 border-t border-line pt-6 sm:flex-row sm:justify-between">
             <button
-              className="min-h-12 rounded-full border border-line px-6 text-sm font-semibold hover:border-purple disabled:cursor-not-allowed disabled:opacity-40"
+              className="min-h-12 rounded-full border border-line px-6 text-sm font-semibold transition hover:border-purple hover:bg-cream disabled:cursor-not-allowed disabled:opacity-40"
               disabled={step === 1 || isSubmitting}
               onClick={() => setStep((current) => Math.max(1, current - 1))}
               type="button"
@@ -561,7 +647,7 @@ export function BookingFlow({
             </button>
             {step < steps.length ? (
               <button
-                className="min-h-12 rounded-full bg-coral px-7 text-sm font-semibold text-ink hover:bg-coral-deep"
+                className="min-h-12 rounded-full bg-coral px-8 text-sm font-semibold text-ink transition hover:bg-coral-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple"
                 onClick={continueFlow}
                 type="button"
               >
@@ -581,21 +667,38 @@ export function BookingFlow({
         </div>
       </div>
 
-      <aside className="border border-line bg-surface p-5 lg:sticky lg:top-28">
-        <p className="eyebrow">Your booking</p>
-        <p className="mt-4 font-display text-2xl">{selectedPackage?.name ?? "Choose a package"}</p>
-        <dl className="mt-6 space-y-3 text-sm">
+      <aside className="hidden overflow-hidden bg-ink text-cream lg:sticky lg:top-28 lg:block">
+        <div className="p-6">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-[0.68rem] font-bold tracking-[0.18em] text-coral uppercase">
+              Your request
+            </p>
+            <span className="rounded-full border border-cream/20 px-2.5 py-1 text-[0.65rem] text-cream/70">
+              Not confirmed
+            </span>
+          </div>
+          <p className="mt-6 font-display text-3xl leading-tight">
+            {selectedPackage?.name ?? "Choose a package"}
+          </p>
+          {selectedPackage ? (
+            <p className="mt-2 text-xs text-cream/55">
+              {formatDuration(selectedPackage.duration_minutes)} session
+            </p>
+          ) : null}
+        </div>
+        <dl className="space-y-4 border-y border-cream/15 px-6 py-5 text-sm">
           <SummaryRow label="Date" value={form.bookingDate ? formatBookingDate(form.bookingDate) : "Not chosen"} />
           <SummaryRow label="Time" value={form.timeSlot ? formatBookingTime(form.timeSlot) : "Not chosen"} />
           <SummaryRow label="Add-ons" value={String(selectedAddons.length)} />
         </dl>
-        <div className="mt-6 flex items-end justify-between border-t border-line pt-5">
-          <span className="text-sm text-muted">Estimated total</span>
-          <span className="font-display text-2xl">{formatMmk(total)}</span>
+        <div className="p-6">
+          <span className="text-xs text-cream/60">Estimated total</span>
+          <span className="mt-1 block font-display text-3xl">{formatMmk(total)}</span>
+          <p className="mt-5 border-t border-cream/15 pt-5 text-xs leading-5 text-cream/55">
+            Final pricing and availability are verified when you submit. No payment is collected
+            online.
+          </p>
         </div>
-        <p className="mt-3 text-xs leading-5 text-muted">
-          Final pricing and availability are verified when you submit.
-        </p>
       </aside>
     </div>
   );
@@ -617,7 +720,7 @@ function BookingStep({
       <p className="eyebrow">{eyebrow}</p>
       <h2 className="mt-3 font-display text-4xl tracking-[-0.04em] sm:text-5xl">{title}</h2>
       {description ? <p className="mt-3 max-w-2xl leading-7 text-muted">{description}</p> : null}
-      <div className="mt-8">{children}</div>
+      <div className="mt-7 sm:mt-8">{children}</div>
     </section>
   );
 }
@@ -660,7 +763,7 @@ function ReviewRow({ label, strong = false, value }: { label: string; strong?: b
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-muted">{label}</dt>
+      <dt className="text-cream/55">{label}</dt>
       <dd className="text-right font-semibold">{value}</dd>
     </div>
   );
