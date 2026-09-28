@@ -1,7 +1,6 @@
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { Container } from "@/components/ui/container";
 import { DataNotice } from "@/components/ui/data-notice";
-import { PageIntro } from "@/components/ui/page-intro";
 import { getStudioToday } from "@/lib/booking";
 import { getActiveAddons, getActivePackages } from "@/lib/public-data";
 
@@ -19,12 +18,25 @@ export default async function BookPage({
   ]);
 
   return (
-    <Container>
-      <PageIntro
-        description="Choose your session, find an open studio time, and send a request for confirmation. No account or payment is required."
-        eyebrow="Book a photoshoot"
-        title="Plan your session in a few clear steps."
-      />
+    <Container className="pb-20 sm:pb-28">
+      <header className="grid gap-8 border-b border-line py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end lg:gap-16 lg:py-20">
+        <div>
+          <p className="eyebrow">Book a photoshoot</p>
+          <h1 className="mt-5 max-w-4xl font-display text-5xl leading-[0.96] tracking-[-0.055em] text-balance sm:text-6xl lg:text-7xl">
+            Your next favorite photographs start here.
+          </h1>
+        </div>
+        <div className="border-l-2 border-coral pl-5 sm:pl-6">
+          <p className="leading-7 text-muted">
+            Choose a session and an open studio time. We will review your request and contact you
+            to confirm the booking.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold tracking-[0.08em] text-ink uppercase">
+            <span>No account</span>
+            <span>No online payment</span>
+          </div>
+        </div>
+      </header>
 
       {packagesResult.status === "error" || addonsResult.status === "error" ? (
         <DataNotice
